@@ -18,7 +18,7 @@ import sys
 import requests
 from playwright.sync_api import sync_playwright
 
-PRODUCT_URL = "https://freitag.ch/en_US/products/f11-lassie"
+PRODUCT_URL = "https://freitag.ch/fr_FR/products/f11-lassie"
 SEEN_FILE = "seen_refs.json"
 TARGET_COLOR = "BLACK"
 
@@ -29,9 +29,11 @@ UA = (
     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 )
 
-# Motif present dans le texte alternatif de chaque vignette:
-# "F11 LASSIE MESSENGER <COULEUR> <REFERENCE>"
-VARIANT_PATTERN = re.compile(r"F11 LASSIE MESSENGER (\w+) (\d{6,})")
+# Motif present dans le texte alternatif de chaque vignette. Selon la
+# langue du site ca peut etre "F11 LASSIE MESSENGER ..." (anglais) ou
+# "F11 LASSIE SACS MESSENGER ..." (francais) - le nom de la couleur, lui,
+# reste toujours en anglais (BLACK, GREEN, etc.)
+VARIANT_PATTERN = re.compile(r"F11 LASSIE(?: SACS)? MESSENGER (\w+) (\d{6,})")
 
 
 def fetch_variants_with_images() -> dict:
@@ -64,7 +66,7 @@ def fetch_variants_with_images() -> dict:
 
         page.wait_for_timeout(1000)
 
-        images = page.query_selector_all("img[alt*='F11 LASSIE MESSENGER']")
+        images = page.query_selector_all("img[alt*='F11 LASSIE']")
         for img in images:
             alt = img.get_attribute("alt") or ""
             src = img.get_attribute("src") or ""
