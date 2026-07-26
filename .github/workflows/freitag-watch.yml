@@ -1,39 +1,58 @@
-name: FREITAG F11 Lassie - Black Watch
+name: FREITAG Watch - F11 Lassie & F14 Dexter
 
 on:
   schedule:
-    # 6 vérifications par jour (heures UTC) -> ~toutes les 3h
     - cron: "0 6,9,12,15,18,21 * * *"
-  workflow_dispatch: {}  # permet de lancer manuellement depuis l'onglet Actions
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # nécessaire pour que le bot puisse committer seen_refs.json
+  contents: write
 
 jobs:
-  check:
+  check_f11:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Installer les dépendances
         run: |
           pip install -r requirements.txt
           playwright install --with-deps chromium
-
-      - name: Lancer la vérification
+      - name: Lancer la vérification F11 Lassie
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python monitor.py
-
       - name: Sauvegarder l'état (seen_refs.json)
         run: |
           git config user.name "freitag-watch-bot"
           git config user.email "actions@users.noreply.github.com"
           git add seen_refs.json
-          git diff --staged --quiet || git commit -m "update seen refs"
+          git diff --staged --quiet || git commit -m "update seen refs f11"
+          git pull --rebase origin main
+          git push
+
+  check_f14:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      - name: Lancer la vérification F14 Dexter
+        env:
+          NTFY_TOPIC_F14: ${{ secrets.NTFY_TOPIC_F14 }}
+        run: python monitor_f14.py
+      - name: Sauvegarder l'état (seen_refs_f14.json)
+        run: |
+          git config user.name "freitag-watch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen_refs_f14.json
+          git diff --staged --quiet || git commit -m "update seen refs f14"
           git pull --rebase origin main
           git push
