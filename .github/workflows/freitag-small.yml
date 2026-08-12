@@ -1,0 +1,42 @@
+name: FREITAG Watch - F40 Jamie & F41 Hawaii Five-0
+
+on:
+  schedule:
+    - cron: "30 7,10,13,16,19,22 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check_small:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Lancer la vérification F40 + F41
+        env:
+          NTFY_TOPIC_SMALL: ${{ secrets.NTFY_TOPIC_SMALL }}
+        run: python monitor_small.py
+
+      - name: Sauvegarder l'état
+        run: |
+          git config user.name "freitag-watch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen_refs_small.json
+          git diff --staged --quiet && exit 0
+          git commit -m "update seen refs small"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && exit 0
+            sleep $((RANDOM % 15 + 5))
+          done
+          exit 1
